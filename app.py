@@ -1,7 +1,80 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
 
 def main():
+    # Initialize session state for history if it doesn't exist
+    if 'history' not in st.session_state:
+        st.session_state.history = []
+    
+    # Set page config to make it look cleaner
+    st.set_page_config(
+        page_title="Unit Converter",
+        page_icon="🔄",
+        layout="centered"
+    )
+    
+    # Add title and description
+    st.title("Unit Converter")
+    st.markdown("Convert between different units of measurement")
+    
+    # Dictionary of conversion categories and their units
+    conversion_types = {
+        "Length": ["Meter", "Kilometer", "Centimeter", "Millimeter", "Mile", "Yard", "Foot", "Inch"],
+        "Mass/Weight": ["Kilogram", "Gram", "Milligram", "Metric Ton", "Pound", "Ounce"],
+        "Volume": ["Liter", "Milliliter", "Cubic Meter", "Gallon", "Quart", "Pint", "Cup", "Fluid Ounce"],
+        "Temperature": ["Celsius", "Fahrenheit", "Kelvin"],
+        "Area": ["Square Meter", "Square Kilometer", "Square Centimeter", "Hectare", "Square Mile", "Acre", "Square Foot", "Square Inch"],
+        "Time": ["Second", "Minute", "Hour", "Day", "Week", "Month", "Year"],
+        "Digital Storage": ["Bit", "Byte", "Kilobyte", "Megabyte", "Gigabyte", "Terabyte"],
+        "Speed": ["Meter per second", "Kilometer per hour", "Mile per hour", "Knot", "Foot per second"]
+    }
+    
+    # Create two columns
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Select conversion category
+        category = st.selectbox("Category", list(conversion_types.keys()))
+        
+        # Input value
+        input_value = st.number_input("Enter value", value=1.0, format="%.10f")
+        
+        # From unit
+        from_unit = st.selectbox("From", conversion_types[category], key="from_unit")
+    
+    with col2:
+        # Placeholder to align with category dropdown
+        st.text("")
+        st.text("")
+        
+        # Result display with background color similar to Google's result
+        result_container = st.container()
+        
+        # To unit
+        to_unit = st.selectbox("To", conversion_types[category], key="to_unit")
+    
+    # Calculate and display the result
+    result = convert(input_value, from_unit, to_unit, category)
+    
+    with result_container:
+        st.markdown(
+            f"""
+            <div style="background-color: #f1f3f4; padding: 20px; border-radius: 8px; text-align: center;">
+                <h2>{result:.10g} {to_unit}</h2>
+            </div>
+            """, 
+            unsafe_allow_html=True
+        )
+    import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+
+def main():
+    # Initialize session state for history if it doesn't exist
+    if 'history' not in st.session_state:
+        st.session_state.history = []
+    
     # Set page config to make it look cleaner
     st.set_page_config(
         page_title="Unit Converter",
@@ -70,6 +143,57 @@ def main():
     # Add example calculation
     if from_unit != to_unit:
         st.markdown(f"**Example:** 1 {from_unit} = {convert(1, from_unit, to_unit, category):.10g} {to_unit}")
+    
+    # Save conversion to history
+    if st.button("Add to History"):
+        st.session_state.history.append({
+            "From": f"{input_value} {from_unit}",
+            "To": f"{result:.10g} {to_unit}",
+            "Category": category
+        })
+        st.rerun()
+
+     
+    # Display conversion history
+    st.subheader("Conversion History")
+    if st.session_state.history:
+        history_df = pd.DataFrame(st.session_state.history)
+        st.table(history_df)
+        if st.button("Clear History"):
+            st.session_state.history = []
+            return
+        
+    
+
+   
+    # Show line graph for the selected units
+    if from_unit != to_unit:
+        conversion_rate = convert(1, from_unit, to_unit, category)
+        show_line_graph(from_unit, to_unit, conversion_rate)
+
+def show_line_graph(from_unit, to_unit, conversion_rate):
+    """Display a line graph for the conversion between selected units"""
+    # Example data: Create a range of values for the x-axis
+    x_values = [i for i in range(1, 11)]  # Values from 1 to 10
+    y_values = [x * conversion_rate for x in x_values]  # Converted values
+    
+    # Create a figure and axis
+    fig, ax = plt.subplots(figsize=(8, 5))
+    
+    # Plot the line graph
+    ax.plot(x_values, y_values, marker='o', color='#1f77b4', linewidth=2, markersize=8, label=f"{from_unit} to {to_unit}")
+    
+    # Customize the graph
+    ax.set_xlabel(from_unit, fontsize=12, fontweight='bold')
+    ax.set_ylabel(to_unit, fontsize=12, fontweight='bold')
+    ax.set_title(f"Conversion: {from_unit} to {to_unit}", fontsize=14, fontweight='bold')
+    ax.grid(True, linestyle='--', alpha=0.7)
+    ax.legend(loc='upper left')
+    
+    # Display the graph in Streamlit
+    st.pyplot(fig)
+
+
 
 def convert(value, from_unit, to_unit, category):
     """Convert value between units"""
