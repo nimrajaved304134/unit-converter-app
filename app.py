@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -75,8 +76,9 @@ def main():
     # Add example calculation
     if from_unit != to_unit:
         st.markdown(f"**Example:** 1 {from_unit} = {convert(1, from_unit, to_unit, category):.10g} {to_unit}")
+   
 
-        # Unit Comparison Mode
+    # Unit Comparison Mode
     st.markdown("---")
     comparison_mode = st.checkbox("Enable Unit Comparison Mode")
 
@@ -101,9 +103,8 @@ def main():
             "Equivalent Value": list(equivalent_values.values())
         })
         st.table(comparison_df)
-        
-    
-    # Save conversion to history
+
+        # Save conversion to history
     if st.button("Add to History"):
         st.session_state.history.append({
             "From": f"{input_value} {from_unit}",
